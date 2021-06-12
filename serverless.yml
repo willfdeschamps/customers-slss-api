@@ -19,6 +19,9 @@ provider:
   stage: ${opt:stage, "dev"}
   region: us-east-1
   environment:
+    COSTUMERS_TABLE: ${env:COSTUMERS_TABLE}
+    REGION: ${env:REGION}
+    DYNAMODB_ENDPOINT: ${env:DYNAMODB_ENDPOINT} 
   # [optional] specify profile set via aws configure --profile profileName
   profile: default
   # [optional] size in MB
@@ -38,11 +41,12 @@ provider:
 
 plugins:
   - serverless-plugin-typescript
+  - serverless-dynamodb-local
   - serverless-offline
-  - serverless-pseudo-parameters
   - serverless-prune-plugin
   - serverless-plugin-tracing
   - serverless-dotenv-plugin
+  
 
 # [optional] in custom, you can set custom variable that you can use in file anywhere
 custom:
@@ -53,8 +57,69 @@ custom:
     automatic: true
     includeLayers: true
     number: 3
-
-
+  dynamodb:
+  # If you only want to use DynamoDB Local in some stages, declare them here
+    stages:
+      - dev
+    start:
+      migrate: true
 
 functions:
+  putCostumer:
+    handler: 'src/costumers/put.default'
+    description: upsert costumers
+    events:
+      - http:
+          path: /
+          method: put
+  getCostumers: 
+    handler: 'src/costumers/get.default'
+    description: get many costumers paginated
+    events:
+      - http:
+          path: /
+          method: get
+          request:
+            parameters:
+              querystrings:
+                limit : true
+                lastKey : true
+  getCostumer: 
+    handler: 'src/costumers/{username}/get.default'
+    description: get one costumer by its username
+    events:
+      - http:
+          path: /{username}
+          method: get
+          request:
+            parameters:
+              paths:
+                username: true
+  deleteConstumer: 
+    handler: 'src/costumers/{username}/delete.default'
+    description: delete costumer by its username
+    events:
+      - http:
+          path: /{username}
+          method: delete
+          request:
+            parameters:
+              paths:
+                username: true
+              
+resources: # CloudFormation template syntax from here on.
+  Resources:
+    constumersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.COSTUMERS_TABLE}
+        AttributeDefinitions:
+          - AttributeName: username
+            AttributeType: S
+        KeySchema:
+          - AttributeName: username
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
                                                                                                  
