@@ -1,0 +1,60 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: costumers-slss-api
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  stage: ${opt:stage, "dev"}
+  region: us-east-1
+  environment:
+  # [optional] specify profile set via aws configure --profile profileName
+  profile: default
+  # [optional] size in MB
+  memorySize: 256
+  # [optional] size in Seconds
+  timeout: 10
+  # [optional] enable tracing
+  tracing: true # enable tracing
+  # [optional] you can add statements to the Lambda function's IAM Role here
+  iamRoleStatements:
+    - Effect: "Allow" # xray permissions (required)
+      Action:
+        - "xray:PutTraceSegments"
+        - "xray:PutTelemetryRecords"
+      Resource:
+        - "*"
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-offline
+  - serverless-pseudo-parameters
+  - serverless-prune-plugin
+  - serverless-plugin-tracing
+  - serverless-dotenv-plugin
+
+# [optional] in custom, you can set custom variable that you can use in file anywhere
+custom:
+  # stage: ${opt:stage, self:provider.stage}
+  serverless-offline:
+    port: 3001
+  prune:
+    automatic: true
+    includeLayers: true
+    number: 3
+
+
+
+functions:
+                                                                                                 

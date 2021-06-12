@@ -1,0 +1,11 @@
+{
+  "include": ["src/**/*"],
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "allowJs": true
+  },
+  "exclude": ["node_modules"],
+  "types": ["node", "aws-sdk"]
+}
