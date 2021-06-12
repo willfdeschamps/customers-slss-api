@@ -1,10 +1,7 @@
 'use strict'
 
 import AWS from 'aws-sdk'
-const docClient = new AWS.DynamoDB.DocumentClient({
-  region: process.env.REGION,
-  endpoint: process.env.DYNAMODB_ENDPOINT,
-})
+const docClient = new AWS.DynamoDB.DocumentClient({})
 import { Handler, Context, Callback } from 'aws-lambda'
 
 const constumerTable = process.env.COSTUMERS_TABLE || ''

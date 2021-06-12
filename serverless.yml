@@ -11,7 +11,7 @@
 #
 # Happy Coding!
 
-service: costumers-slss-api
+service: costumer-slss-api
 
 provider:
   name: aws
@@ -22,6 +22,8 @@ provider:
     COSTUMERS_TABLE: ${env:COSTUMERS_TABLE}
     REGION: ${env:REGION}
     DYNAMODB_ENDPOINT: ${env:DYNAMODB_ENDPOINT} 
+    ELASTICSEARCH_URL:
+      Fn::GetAtt: ["CostumersSearch", "DomainEndpoint"]
   # [optional] specify profile set via aws configure --profile profileName
   profile: default
   # [optional] size in MB
@@ -38,6 +40,19 @@ provider:
         - "xray:PutTelemetryRecords"
       Resource:
         - "*"
+    - Effect: Allow
+      Action:
+        - dynamodb:DescribeTable
+        - dynamodb:GetRecords
+        - dynamodb:GetShardIterator
+        - dynamodb:ListStreams
+        - dynamodb:putItem
+        - dynamodb:getItem
+        - dynamodb:deleteItem
+        - es:ESHttpPost
+        - es:ESHttpPut
+        - es:ESHttpDelete
+      Resource: "*"
 
 plugins:
   - serverless-plugin-typescript
@@ -66,14 +81,14 @@ custom:
 
 functions:
   putCostumer:
-    handler: 'src/costumers/put.default'
+    handler: 'src/api/costumers/put.default'
     description: upsert costumers
     events:
       - http:
           path: /
           method: put
   getCostumers: 
-    handler: 'src/costumers/get.default'
+    handler: 'src/api/costumers/get.default'
     description: get many costumers paginated
     events:
       - http:
@@ -85,7 +100,7 @@ functions:
                 limit : true
                 lastKey : true
   getCostumer: 
-    handler: 'src/costumers/{username}/get.default'
+    handler: 'src/api/costumers/{username}/get.default'
     description: get one costumer by its username
     events:
       - http:
@@ -96,7 +111,7 @@ functions:
               paths:
                 username: true
   deleteConstumer: 
-    handler: 'src/costumers/{username}/delete.default'
+    handler: 'src/api/costumers/{username}/delete.default'
     description: delete costumer by its username
     events:
       - http:
@@ -106,10 +121,19 @@ functions:
             parameters:
               paths:
                 username: true
+  dynamodbToElasticSearch:    
+    handler: 'src/infra/dynamodb-to-elasticsearch.default'
+    environment:
+      ES_HOST: ''
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt: [CostumersTable, StreamArn]
               
 resources: # CloudFormation template syntax from here on.
   Resources:
-    constumersTable:
+    CostumersTable:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: ${self:provider.environment.COSTUMERS_TABLE}
@@ -122,4 +146,33 @@ resources: # CloudFormation template syntax from here on.
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+    CostumersSearch:
+        Type: "AWS::Elasticsearch::Domain"
+        Properties:
+          ElasticsearchVersion: "7.7"
+          DomainName: "costumers-search"
+          ElasticsearchClusterConfig:
+            DedicatedMasterEnabled: false
+            InstanceCount: "1"
+            ZoneAwarenessEnabled: false
+            InstanceType: "t2.small.elasticsearch"
+          EBSOptions:
+            EBSEnabled: true
+            Iops: 0
+            VolumeSize: 10
+            VolumeType: "gp2"
+          AccessPolicies:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Principal:
+                  AWS: '*'
+                Action: 'es:*'
+                Resource: "arn:aws:es:us-east-1:xxxxxx:domain/xxxxx/*"
+                Condition:
+                  IpAddress:
+                    aws:SourceIp: 
+                      - "YOUR_LOCAL_MACHINE_IP_FOR_TESTING_HERE"
                                                                                                  

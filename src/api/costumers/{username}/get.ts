@@ -1,10 +1,7 @@
 'use strict'
 
 import AWS from 'aws-sdk'
-const docClient = new AWS.DynamoDB.DocumentClient({
-  region: process.env.REGION,
-  endpoint: process.env.DYNAMODB_ENDPOINT,
-})
+const docClient = new AWS.DynamoDB.DocumentClient({})
 import { Handler, Context, Callback } from 'aws-lambda'
 
 const constumerTable = process.env.COSTUMERS_TABLE || ''
@@ -15,18 +12,18 @@ const handler: Handler = async (
   callback: Callback,
 ) => {
   try {
-    const item = JSON.parse(event.body)
-
-    await docClient
-      .put({
-        Item: item,
+    const { username } = event.pathParameters
+    const item = await docClient
+      .get({
+        Key: {
+         username 
+        },
         TableName: constumerTable,
       })
       .promise()
-
-    return { body: JSON.stringify({ ok: true }) }
+    return { body: JSON.stringify(item.Item) }
   } catch (err) {
-    console.log('file: put.ts ~ line 27 ~ err', err)
+    console.log("file: get.ts ~ line 29 ~ err", err)
     return { error: err }
   }
 }
