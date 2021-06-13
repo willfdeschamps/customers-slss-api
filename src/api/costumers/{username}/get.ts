@@ -1,9 +1,18 @@
 'use strict'
 
 import AWS from 'aws-sdk'
-const docClient = new AWS.DynamoDB.DocumentClient({})
 import { Handler, Context, Callback } from 'aws-lambda'
 
+import middy from 'middy'
+import {
+  httpHeaderNormalizer,
+  jsonBodyParser,
+  httpErrorHandler,
+  cors,
+} from 'middy/middlewares'
+import { makeResponse, Response } from '../../../utils/response'
+
+const docClient = new AWS.DynamoDB.DocumentClient({})
 const constumerTable = process.env.COSTUMERS_TABLE || ''
 
 const handler: Handler = async (
@@ -11,6 +20,7 @@ const handler: Handler = async (
   context: Context,
   callback: Callback,
 ) => {
+  let response : Response;
   try {
     const { username } = event.pathParameters
     const item = await docClient
@@ -21,11 +31,15 @@ const handler: Handler = async (
         TableName: constumerTable,
       })
       .promise()
-    return { body: JSON.stringify(item.Item) }
+    response = makeResponse(200, item.Item)
   } catch (err) {
     console.log("file: get.ts ~ line 29 ~ err", err)
-    return { error: err }
+    response = makeResponse(500, { code: 'INTERNAL_SERVER_ERROR', message: err })
   }
+  return response
 }
 
-export default handler
+export default middy(handler)
+  .use(httpHeaderNormalizer())
+  .use(jsonBodyParser())
+  .use(httpErrorHandler());
