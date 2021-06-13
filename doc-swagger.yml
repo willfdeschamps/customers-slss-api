@@ -1,0 +1,306 @@
+openapi: 3.0.0
+info:
+  version: '0.0.1'
+  title: 'Costumers API'
+  description: 'Describes contracts for a Costumers API.'
+paths:
+  /:
+    put:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertCostumer'
+      responses:
+        200:
+          $ref: '#/components/responses/Done'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+      x-amazon-apigateway-integration:
+        type: mock
+        passthroughBehavior: "when_no_match"
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin : "'*'"
+            responseTemplates:
+              application/json: |
+                {
+                  "data": {
+                    "ok": true
+                  }
+                }  
+    get:
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/LastKey'
+      responses:
+        200:
+          $ref: '#/components/responses/Costumers'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+      x-amazon-apigateway-integration:
+        type: mock
+        passthroughBehavior: "when_no_match"
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin : "'*'"
+            responseTemplates:
+              application/json: |
+                {
+                    "data": [
+                        {
+                            "username": "willfdeschamps",
+                            "address": "Chapecó Street 229",
+                            "email": "williamfdeschamps2@gmail.com",
+                            "name": "William Deschamps"
+                        },
+                        {
+                            "username": "willfdeschamps2",
+                            "address": "Chapecó Street 229",
+                            "email": "williamfdeschamps2@gmail.com",
+                            "name": "William Deschamps"
+                        }
+                    ],
+                    "meta": {
+                        "lastKey": {
+                            "username": "willfdeschamps2"
+                        },
+                        "count": 2
+                    }
+                }
+  
+  /{username}:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/Username'
+      responses:
+        200:
+          $ref: '#/components/responses/Costumer'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+      x-amazon-apigateway-integration:
+        type: mock
+        passthroughBehavior: "when_no_match"
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin : "'*'"
+            responseTemplates:
+              application/json: |
+                {
+                	"data": {
+                      "username": "willfdeschamps2",
+                      "address": "Chapecó Street 229",
+                      "email": "williamfdeschamps2@gmail.com",
+                      "name": "William Deschamps"
+                	}
+                }
+    delete:
+      parameters:
+        - $ref: '#/components/parameters/Username'
+      responses:
+        200:
+          $ref: '#/components/responses/Done'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+      x-amazon-apigateway-integration:
+        type: mock
+        passthroughBehavior: "when_no_match"
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          "default":
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin : "'*'"
+            responseTemplates:
+              application/json: |
+                {
+                	"data": {
+                      "ok": true
+                	}
+                }
+components:
+  parameters:
+    LastKey:
+      in: query
+      name: lasKey
+      schema:
+        type: string
+      description: Last key returned in the last request metadata, its used for pagination
+    Limit:
+      in: query
+      name: limit
+      schema:
+        type: integer
+      description: Limit
+    Username:
+      in: path
+      name: username
+      schema:
+        type: string
+      required: true
+      allowEmptyValue: false
+  responses:
+    Costumers:
+      description: Returns costumers paginated.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Costumers'
+    Costumer:
+      description: Returns costumer by its username.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Costumer'
+    Done:
+      description: Returns done message.
+      headers:
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Done'
+    InternalServerError:
+      description: Internal Server Error.
+      headers:
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Costumers:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              username:
+                type: string
+              name:
+                type: string
+              email:
+                type: string
+              phone:
+                type: string
+              address:
+                type: string
+              birthdate:
+                type: string
+            required:
+              - name
+              - email
+              - address
+    Costumer:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            username:
+              type: string
+            name:
+              type: string
+            email:
+              type: string
+            phone:
+              type: string
+            address:
+              type: string
+            birthdate:
+              type: string
+          required:
+            - name
+            - email
+            - address
+    UpsertCostumer:
+      type: object
+      properties:
+        username:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        birthdate:
+          type: string
+      required:
+        - name
+        - email
+        - address
+    Done:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            ok:
+              description: Done message
+              type: boolean
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
