@@ -11,20 +11,19 @@ import {
   httpErrorHandler,
   cors,
 } from 'middy/middlewares'
+import { makeResponse, Response } from '../../utils/response'
 
 import costumerPutSchema from './costumer.put.schema'
-import {makeResponse, Response} from '../../utils/response'
+import validate from './costumer.put.validation'
 
 const docClient = new AWS.DynamoDB.DocumentClient({})
 const constumerTable = process.env.COSTUMERS_TABLE || ''
 
-const handler: Handler = async (
-  event: any
-) => {
-  let response : Response;
+const handler: Handler = async (event: any) => {
+  let response: Response
   try {
     const item = event.body
-
+    validate(item)
     await docClient
       .put({
         Item: item,
@@ -34,7 +33,12 @@ const handler: Handler = async (
 
     response = makeResponse(200, { ok: true })
   } catch (err) {
-    response = makeResponse(500, { code: 'INTERNAL_SERVER_ERROR', message: err })
+    response = err.code
+      ? makeResponse(400, err)
+      : makeResponse(500, {
+          code: 'INTERNAL_SERVER_ERROR',
+          message: err,
+        })
   }
 
   return response
