@@ -24,22 +24,13 @@ provider:
     DYNAMODB_ENDPOINT: ${env:DYNAMODB_ENDPOINT} 
     ELASTICSEARCH_URL:
       Fn::GetAtt: ["CostumersSearch", "DomainEndpoint"]
-  # [optional] specify profile set via aws configure --profile profileName
   profile: default
-  # [optional] size in MB
   memorySize: 256
-  # [optional] size in Seconds
   timeout: 10
-  # [optional] enable tracing
-  tracing: true # enable tracing
-  # [optional] you can add statements to the Lambda function's IAM Role here
+  tracing:
+    apiGateway: true
+    lambda: true
   iamRoleStatements:
-    - Effect: "Allow" # xray permissions (required)
-      Action:
-        - "xray:PutTraceSegments"
-        - "xray:PutTelemetryRecords"
-      Resource:
-        - "*"
     - Effect: Allow
       Action:
         - dynamodb:DescribeTable
@@ -59,7 +50,6 @@ plugins:
   - serverless-dynamodb-local
   - serverless-offline
   - serverless-prune-plugin
-  - serverless-plugin-tracing
   - serverless-dotenv-plugin
   
 
