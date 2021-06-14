@@ -165,7 +165,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 <!-- CONTACT -->
 ## Contact
 
-William Deschamps - [@twitter_handle](https://twitter.com/twitter_handle) - email
+William Deschamps - [@linkedin_handle](https://www.linkedin.com/in/william-deschamps-518148146/) - williamfdeschamps@gmail.com
 
 [Project link](https://github.com/willfdeschamps/customers-slss-api)
 
